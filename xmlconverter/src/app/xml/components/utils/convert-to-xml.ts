@@ -12,24 +12,16 @@ function getCharBeforePipe(row: string) {
 export default function convertToXml(data: string): string | XmlParseError {
   try {
     const stringifiedData = JSON.stringify(data.trim()).replace(/"/g, "");
-
-    // console.log("STRINGIFIED DATA: ", stringifiedData);
-
     const rows = stringifiedData.split("\\n");
 
-    // console.log("ROWS: ", rows);
-
     const people: Person[] = [];
-
     let person = {} as Person;
-    // let newPerson = false;
 
     rows.forEach((row, index) => {
       const entityData = row.split("|");
       switch (getCharBeforePipe(row)) {
         case "P":
           // is a new person
-
           // check if the person object is not empty, due to the string can contain multiple people
           if (Object.keys(person).length !== 0) {
             // push up previous person, clearing the person object
@@ -51,7 +43,7 @@ export default function convertToXml(data: string): string | XmlParseError {
         case "F":
           let phone: Telephone | null = null;
           let address: Address | null = null;
-          // check if the family member has an address or telephone
+          // check if the family member has an adjacent address and/or telephone
           try {
             if (getCharBeforePipe(rows[index + 1]) === "A") {
               // is a new address or telephone
@@ -74,7 +66,7 @@ export default function convertToXml(data: string): string | XmlParseError {
             // ignore this, family members may not have an address or telephone
           }
 
-          // is a new family
+          // is a new family member
           if (!!entityData[1]) {
             person.family = [
               ...(person.family || []),
@@ -118,18 +110,14 @@ export default function convertToXml(data: string): string | XmlParseError {
     people.push(person);
     person = {} as Person;
 
-    // console.log("PEOPLE: ", people);
-
     // Build up the XML document
     const doc = create().ele("people");
     people.forEach((person) => {
       doc.ele("person").ele(person);
     });
     const xml = doc.end({ prettyPrint: true });
-
-    // console.log("XML: ", xml);
-
     return xml;
+    
   } catch (e) {
     console.error(e);
     const error = {
